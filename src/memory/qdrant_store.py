@@ -54,7 +54,17 @@ class QdrantMemoryStore:
         abs_path = os.path.abspath(self.storage_path)
         if abs_path not in self._local_clients:
             logger.info(f"Initialized local Qdrant storage at {self.storage_path}")
-            self._local_clients[abs_path] = QdrantClient(path=self.storage_path)
+            try:
+                self._local_clients[abs_path] = QdrantClient(path=self.storage_path)
+            except Exception as e:
+                err_str = str(e).lower()
+                if "already accessed by another instance" in err_str or "permission denied" in err_str or "locked" in err_str:
+                    logger.warning(
+                        f"Local Qdrant storage at {self.storage_path} is locked by another running process (e.g. dev server). "
+                        "Using isolated in-memory store for this session."
+                    )
+                    return QdrantClient(location=":memory:")
+                raise
         return self._local_clients[abs_path]
 
     def close(self) -> None:
