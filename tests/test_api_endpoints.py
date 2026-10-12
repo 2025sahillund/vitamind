@@ -6,6 +6,15 @@ from src.api.app import app
 client = TestClient(app)
 
 
+def test_root_endpoint():
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["service"] == "vitamind"
+    assert data["status"] == "healthy"
+    assert "/api/v1/omi/webhook" in data["omi_webhook_endpoint"]
+
+
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
@@ -13,6 +22,14 @@ def test_health_endpoint():
     assert data["status"] == "healthy"
     assert data["service"] == "vitamind"
     assert data["version"] == "0.1.0"
+
+
+def test_omi_webhook_get_probe():
+    response = client.get("/api/v1/omi/webhook")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ready"
+    assert data["supported_method"] == "POST"
 
 
 def test_config_status_endpoint():

@@ -15,6 +15,20 @@ memory_store = QdrantMemoryStore()
 lyzr_client = LyzrAgentClient()
 
 
+@router.get("/")
+def root():
+    """Service landing endpoint for browser probes and discovery."""
+    return {
+        "service": "vitamind",
+        "description": "Continuous Health & Habit Intelligence (Lyzr x Qdrant x Omi)",
+        "status": "healthy",
+        "version": "0.1.0",
+        "docs_url": "/docs",
+        "health_check": "/health",
+        "omi_webhook_endpoint": "/api/v1/omi/webhook"
+    }
+
+
 @router.get("/health")
 def health_check():
     """FastAPI service health check."""
@@ -36,6 +50,20 @@ def config_status():
     # Add live Qdrant collection status
     status["qdrant_live"] = memory_store.get_collection_info()
     return status
+
+
+@router.get("/api/v1/omi/webhook")
+def omi_webhook_probe():
+    """
+    Safe verification probe for webhook setup, browser visits, and tunnel connectivity.
+    Does NOT process transcripts or ingest health events.
+    """
+    return {
+        "status": "ready",
+        "service": "vitamind_omi_webhook",
+        "supported_method": "POST",
+        "message": "Omi memory webhook endpoint is active and listening for POST events."
+    }
 
 
 @router.post("/api/v1/omi/webhook")
